@@ -5,6 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Download, Calendar, TrendingDown, Shield, FileText, CheckCircle, AlertTriangle, Info, Calculator, Euro } from "lucide-react";
 import { FormData } from "@/types/form";
 import { evaluateFiscalRules, getRecommendedTaxStructure } from "@/utils/fiscalRules";
+import { getExternalRecommendation, ExternalRule } from "@/utils/dynamicRules";
+import { useState, useEffect } from "react";
 import { compareScenarios, simulateAutonomoTaxes, simulateSLTaxes } from "@/utils/taxSimulator";
 
 interface ResultsPageProps {
@@ -16,6 +18,12 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
   // Evaluación con el nuevo sistema de reglas
   const applicableRules = evaluateFiscalRules(formData);
   const recommendedStructure = getRecommendedTaxStructure(formData);
+
+  const [externalRecommendation, setExternalRecommendation] = useState<ExternalRule | null>(null);
+
+  useEffect(() => {
+    getExternalRecommendation(formData).then(setExternalRecommendation);
+  }, [formData]);
   
   // Simulación fiscal real
   const parseRevenue = (revenueRange: string): number => {
@@ -65,6 +73,25 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
             </Button>
           </div>
         </div>
+
+        {externalRecommendation && (
+          <Card className="mb-8 border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="w-5 h-5 text-blue-600" />
+                Regla externa aplicada
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-2">{externalRecommendation.recomendacion}</p>
+              {externalRecommendation.deducciones && (
+                <div className="text-sm text-muted-foreground">
+                  Deducciones: {externalRecommendation.deducciones.join(', ')}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Results */}

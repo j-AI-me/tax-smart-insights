@@ -1,0 +1,12 @@
+[
+  {
+    "condiciones": {
+      "sector": "Tecnología",
+      "facturacionMin": 50000,
+      "socios": true
+    },
+    "recomendacion": "Sociedad Limitada",
+    "tipoImpositivo": 25,
+    "deducciones": ["I+D+i"]
+  }
+]
