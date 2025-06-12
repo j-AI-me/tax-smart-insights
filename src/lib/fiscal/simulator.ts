@@ -22,27 +22,16 @@ export interface ExpenseBreakdown {
   other: number;
 }
 
-// Tarifas IRPF 2024 (Estatal + Autonómica media)
-const IRPF_BRACKETS = [
-  { min: 0, max: 12450, rate: 19 },
-  { min: 12450, max: 20200, rate: 24 },
-  { min: 20200, max: 35200, rate: 30 },
-  { min: 35200, max: 60000, rate: 37 },
-  { min: 60000, max: 300000, rate: 47 },
-  { min: 300000, max: Infinity, rate: 47 }
-];
+import irpfBrackets from "@/data/irpf_brackets.json";
+import corporateTax from "@/data/corporate_tax.json";
+import ssBases from "@/data/social_security.json";
 
-// Tarifas IS 2024
-const IS_RATE_GENERAL = 25;
-const IS_RATE_REDUCED = 15; // Para startups y PYMEs
-const IS_RATE_MINIMUM = 15000; // Cuota mínima para grandes empresas
-
-// Bases de cotización SS 2024
-const SS_BASES = {
-  autonomo_minima: 294.30,
-  autonomo_maxima: 1266.00,
-  empleado_empresa_rate: 0.2955 // 29.55% total (empresa + trabajador)
-};
+// Datos normativos cargados desde archivos JSON
+const IRPF_BRACKETS = irpfBrackets as { min: number; max: number | null; rate: number }[];
+const IS_RATE_GENERAL = corporateTax.generalRate;
+const IS_RATE_REDUCED = corporateTax.reducedRate;
+const IS_RATE_MINIMUM = corporateTax.minimumQuota;
+const SS_BASES = ssBases as Record<string, number>;
 
 export function calculateIRPF(taxableIncome: number): number {
   let tax = 0;
@@ -51,7 +40,8 @@ export function calculateIRPF(taxableIncome: number): number {
   for (const bracket of IRPF_BRACKETS) {
     if (remainingIncome <= 0) break;
     
-    const taxableAtThisBracket = Math.min(remainingIncome, bracket.max - bracket.min);
+    const bracketLimit = (bracket.max ?? Infinity) - bracket.min;
+    const taxableAtThisBracket = Math.min(remainingIncome, bracketLimit);
     tax += taxableAtThisBracket * (bracket.rate / 100);
     remainingIncome -= taxableAtThisBracket;
   }

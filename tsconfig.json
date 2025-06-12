@@ -13,6 +13,8 @@
     "noUnusedParameters": false,
     "skipLibCheck": true,
     "allowJs": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "noUnusedLocals": false,
     "strictNullChecks": false
   }

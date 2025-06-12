@@ -22,30 +22,9 @@ export interface TaxRegime {
 }
 
 // Regímenes fiscales según normativa AEAT 2024
-export const TAX_REGIMES: TaxRegime[] = [
-  {
-    type: 'autonomo',
-    name: 'Autónomo - Estimación Directa',
-    irpfRate: 19, // Hasta 12.450€, luego escala
-    ivaRate: 21,
-    maxRevenue: 1000000,
-    socialSecurityBase: 294.30 // Base mínima 2024
-  },
-  {
-    type: 'autonomo',
-    name: 'Autónomo - Módulos',
-    irpfRate: 1, // Estimación objetiva
-    ivaRate: 21,
-    maxRevenue: 150000
-  },
-  {
-    type: 'sl',
-    name: 'Sociedad Limitada',
-    isRate: 25, // Tipo general IS
-    ivaRate: 21,
-    minRevenue: 0
-  }
-];
+import taxRegimesData from "@/data/tax_regimes.json";
+
+export const TAX_REGIMES: TaxRegime[] = taxRegimesData as TaxRegime[];
 
 // Sistema de reglas basado en normativa fiscal española
 export const FISCAL_RULES: FiscalRule[] = [

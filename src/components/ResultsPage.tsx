@@ -4,8 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Download, Calendar, TrendingDown, Shield, FileText, CheckCircle, AlertTriangle, Info, Calculator, Euro } from "lucide-react";
 import { FormData } from "@/types/form";
-import { evaluateFiscalRules, getRecommendedTaxStructure } from "@/utils/fiscalRules";
-import { compareScenarios, simulateAutonomoTaxes, simulateSLTaxes } from "@/utils/taxSimulator";
+import {
+  evaluateFiscalRules,
+  getRecommendedTaxStructure,
+  compareScenarios,
+  simulateAutonomoTaxes,
+  simulateSLTaxes,
+} from "@/lib/fiscal";
 
 interface ResultsPageProps {
   formData: FormData;
