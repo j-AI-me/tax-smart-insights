@@ -150,7 +150,7 @@ export const FISCAL_RULES: FiscalRule[] = [
   }
 ];
 
-function parseRevenueValue(revenueRange: string): number {
+export function parseRevenueValue(revenueRange: string): number {
   if (!revenueRange) return 0;
   
   if (revenueRange.includes('Menos de 30.000€')) return 25000;
