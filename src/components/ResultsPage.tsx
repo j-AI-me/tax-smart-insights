@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Download, Calendar, TrendingDown, Shield, FileText, CheckCircle, AlertTriangle, Info, Calculator, Euro } from "lucide-react";
 import { FormData } from "@/types/form";
-import { evaluateFiscalRules, getRecommendedTaxStructure } from "@/utils/fiscalRules";
+import { evaluateFiscalRules, getRecommendedTaxStructure, parseRevenueValue } from "@/utils/fiscalRules";
 import { getDefaultFiscalAlerts, getUpcomingObligations } from "@/utils/fiscalAlerts";
 import { compareScenarios, simulateAutonomoTaxes, simulateSLTaxes } from "@/utils/taxSimulator";
 
@@ -21,16 +21,8 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
   const obligations = getUpcomingObligations(new Date());
   
   // Simulación fiscal real
-  const parseRevenue = (revenueRange: string): number => {
-    if (revenueRange.includes('Menos de 30.000€')) return 25000;
-    if (revenueRange.includes('30.000€ - 100.000€')) return 65000;
-    if (revenueRange.includes('100.000€ - 300.000€')) return 200000;
-    if (revenueRange.includes('300.000€ - 1M€')) return 650000;
-    if (revenueRange.includes('Más de 1M€')) return 1500000;
-    return 65000;
-  };
 
-  const estimatedRevenue = parseRevenue(formData.expectedRevenue);
+  const estimatedRevenue = parseRevenueValue(formData.expectedRevenue);
   const taxComparison = compareScenarios(estimatedRevenue, formData);
   
   // Cálculo específico para la estructura recomendada

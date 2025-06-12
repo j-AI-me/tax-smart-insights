@@ -139,7 +139,9 @@ export const FISCAL_RULES: FiscalRule[] = [
   {
     id: 'export_benefits',
     name: 'Beneficios por exportación',
-    condition: (data) => data.hasInternationalActivity === 'yes',
+    condition: (data) =>
+      data.hasInternationalActivity === 'regular' ||
+      data.hasInternationalActivity === 'occasional',
     recommendation: 'Las empresas exportadoras tienen incentivos fiscales.',
     deductions: [
       'Exención en IS por rentas obtenidas en el extranjero',
