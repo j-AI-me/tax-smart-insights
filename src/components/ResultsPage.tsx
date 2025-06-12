@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +7,8 @@ import { ArrowLeft, Download, Calendar, TrendingDown, Shield, FileText, CheckCir
 import { FormData } from "@/types/form";
 import { evaluateFiscalRules, getRecommendedTaxStructure } from "@/utils/fiscalRules";
 import { compareScenarios, simulateAutonomoTaxes, simulateSLTaxes } from "@/utils/taxSimulator";
+import { fetchActiveIncentives, Incentive } from "@/api/redes";
+import { generateAsedafRecord, downloadAsedaf } from "@/utils/exportASEDAF";
 
 interface ResultsPageProps {
   formData: FormData;
@@ -16,6 +19,16 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
   // Evaluación con el nuevo sistema de reglas
   const applicableRules = evaluateFiscalRules(formData);
   const recommendedStructure = getRecommendedTaxStructure(formData);
+
+  const [incentives, setIncentives] = useState<Incentive[]>([]);
+
+  useEffect(() => {
+    fetchActiveIncentives()
+      .then(setIncentives)
+      .catch(() => {
+        /* API not reachable */
+      });
+  }, []);
   
   // Simulación fiscal real
   const parseRevenue = (revenueRange: string): number => {
@@ -35,8 +48,16 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
     ? taxComparison.sl 
     : taxComparison.autonomo;
 
-  const formatCurrency = (amount: number) => 
+  const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
+
+  const exportASEDAF = () => {
+    const records = [
+      generateAsedafRecord(formData, taxComparison.autonomo, 'autonomo'),
+      generateAsedafRecord(formData, taxComparison.sl, 'sl'),
+    ];
+    downloadAsedaf(records, 'informe-asedaf.csv');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-8">
@@ -58,6 +79,10 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Descargar PDF
+            </Button>
+            <Button variant="outline" onClick={exportASEDAF}>
+              <FileText className="w-4 h-4 mr-2" />
+              Exportar ASEDAF
             </Button>
             <Button className="bg-gradient-to-r from-blue-600 to-green-600">
               <Calendar className="w-4 h-4 mr-2" />
@@ -313,6 +338,34 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
                     📞 900 123 456 | ✉️ info@fiscaloptima.es
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Incentivos RED.es */}
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingDown className="w-5 h-5 text-purple-600" />
+                  Incentivos Activos RED.es
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc pl-4 space-y-1 text-sm">
+                  {incentives.map((inc) => (
+                    <li key={inc.id}>
+                      {inc.url ? (
+                        <a href={inc.url} className="text-blue-600 hover:underline" target="_blank" rel="noreferrer">
+                          {inc.name}
+                        </a>
+                      ) : (
+                        inc.name
+                      )}
+                    </li>
+                  ))}
+                  {incentives.length === 0 && (
+                    <li className="text-muted-foreground">No se pudieron cargar incentivos.</li>
+                  )}
+                </ul>
               </CardContent>
             </Card>
 
