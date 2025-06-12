@@ -4,6 +4,9 @@ export interface FiscalRule {
   name: string;
   condition: (data: any) => boolean;
   recommendation: string;
+  startDate: string;
+  endDate?: string;
+  sourceBOE: string;
   taxStructure?: string;
   deductions?: string[];
   risks?: string[];
@@ -53,6 +56,8 @@ export const FISCAL_RULES: FiscalRule[] = [
   {
     id: 'low_revenue_autonomo',
     name: 'Facturación baja - Régimen de autónomos',
+    startDate: '2024-01-01',
+    sourceBOE: 'BOE-A-2023-1001',
     condition: (data) => {
       const revenue = parseRevenueValue(data.expectedRevenue);
       return revenue < 30000;
@@ -72,6 +77,8 @@ export const FISCAL_RULES: FiscalRule[] = [
   {
     id: 'medium_revenue_partners_sl',
     name: 'Facturación media con socios - Sociedad Limitada',
+    startDate: '2024-01-01',
+    sourceBOE: 'BOE-A-2023-1002',
     condition: (data) => {
       const revenue = parseRevenueValue(data.expectedRevenue);
       return revenue >= 30000 && revenue <= 100000 && data.hasPartners === 'yes';
@@ -91,6 +98,8 @@ export const FISCAL_RULES: FiscalRule[] = [
   {
     id: 'high_revenue_sl',
     name: 'Facturación alta - Sociedad Limitada obligatoria',
+    startDate: '2024-01-01',
+    sourceBOE: 'BOE-A-2023-1003',
     condition: (data) => {
       const revenue = parseRevenueValue(data.expectedRevenue);
       return revenue > 100000;
@@ -110,6 +119,8 @@ export const FISCAL_RULES: FiscalRule[] = [
   {
     id: 'rdi_deductions',
     name: 'Deducciones por I+D+i',
+    startDate: '2024-01-01',
+    sourceBOE: 'BOE-A-2023-1004',
     condition: (data) => data.hasSpecialDeductions?.includes('rdi'),
     recommendation: 'Las actividades de I+D+i tienen importantes deducciones fiscales.',
     deductions: [
@@ -125,6 +136,8 @@ export const FISCAL_RULES: FiscalRule[] = [
   {
     id: 'tech_sector_benefits',
     name: 'Beneficios sector tecnológico',
+    startDate: '2024-01-01',
+    sourceBOE: 'BOE-A-2023-1005',
     condition: (data) => data.economicSector === 'Tecnología e Informática',
     recommendation: 'El sector tecnológico tiene ventajas fiscales específicas.',
     deductions: [
@@ -139,6 +152,8 @@ export const FISCAL_RULES: FiscalRule[] = [
   {
     id: 'export_benefits',
     name: 'Beneficios por exportación',
+    startDate: '2024-01-01',
+    sourceBOE: 'BOE-A-2023-1006',
     condition: (data) => data.hasInternationalActivity === 'yes',
     recommendation: 'Las empresas exportadoras tienen incentivos fiscales.',
     deductions: [
@@ -162,14 +177,30 @@ function parseRevenueValue(revenueRange: string): number {
   return 0;
 }
 
-export function evaluateFiscalRules(formData: any): FiscalRule[] {
-  return FISCAL_RULES
+export function getRulesByFiscalYear(year: number): FiscalRule[] {
+  return FISCAL_RULES.filter(rule => {
+    const start = new Date(rule.startDate).getFullYear();
+    const end = rule.endDate ? new Date(rule.endDate).getFullYear() : Infinity;
+    return year >= start && year <= end;
+  });
+}
+
+export function getRuleChangesByFiscalYear(year: number): FiscalRule[] {
+  return FISCAL_RULES.filter(rule => {
+    const startYear = new Date(rule.startDate).getFullYear();
+    const endYear = rule.endDate ? new Date(rule.endDate).getFullYear() : null;
+    return startYear === year || endYear === year;
+  });
+}
+
+export function evaluateFiscalRules(formData: any, fiscalYear = new Date().getFullYear()): FiscalRule[] {
+  return getRulesByFiscalYear(fiscalYear)
     .filter(rule => rule.condition(formData))
     .sort((a, b) => a.priority - b.priority);
 }
 
-export function getRecommendedTaxStructure(formData: any): TaxRegime {
-  const applicableRules = evaluateFiscalRules(formData);
+export function getRecommendedTaxStructure(formData: any, fiscalYear = new Date().getFullYear()): TaxRegime {
+  const applicableRules = evaluateFiscalRules(formData, fiscalYear);
   const revenue = parseRevenueValue(formData.expectedRevenue);
   
   // Lógica de decisión basada en reglas y facturación

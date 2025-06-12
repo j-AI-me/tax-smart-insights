@@ -14,8 +14,9 @@ interface ResultsPageProps {
 
 const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
   // Evaluación con el nuevo sistema de reglas
-  const applicableRules = evaluateFiscalRules(formData);
-  const recommendedStructure = getRecommendedTaxStructure(formData);
+  const fiscalYear = 2024;
+  const applicableRules = evaluateFiscalRules(formData, fiscalYear);
+  const recommendedStructure = getRecommendedTaxStructure(formData, fiscalYear);
   
   // Simulación fiscal real
   const parseRevenue = (revenueRange: string): number => {
