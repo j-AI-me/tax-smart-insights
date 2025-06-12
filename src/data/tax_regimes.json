@@ -1,0 +1,24 @@
+[
+  {
+    "type": "autonomo",
+    "name": "Aut\u00f3nomo - Estimaci\u00f3n Directa",
+    "irpfRate": 19,
+    "ivaRate": 21,
+    "maxRevenue": 1000000,
+    "socialSecurityBase": 294.30
+  },
+  {
+    "type": "autonomo",
+    "name": "Aut\u00f3nomo - M\u00f3dulos",
+    "irpfRate": 1,
+    "ivaRate": 21,
+    "maxRevenue": 150000
+  },
+  {
+    "type": "sl",
+    "name": "Sociedad Limitada",
+    "isRate": 25,
+    "ivaRate": 21,
+    "minRevenue": 0
+  }
+]
