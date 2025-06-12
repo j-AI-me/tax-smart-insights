@@ -1,0 +1,44 @@
+[
+  {
+    "name": "autonomo_estimacion_directa",
+    "revenue": 50000,
+    "expenses": {
+      "officeExpenses": 5000,
+      "equipmentDepreciation": 2000,
+      "professionalServices": 3000,
+      "training": 0,
+      "travel": 0,
+      "supplies": 0,
+      "other": 0
+    },
+    "expectedTaxableIncome": 40000
+  },
+  {
+    "name": "sl_sin_beneficios",
+    "revenue": 100000,
+    "expenses": {
+      "officeExpenses": 70000,
+      "equipmentDepreciation": 0,
+      "professionalServices": 0,
+      "training": 0,
+      "travel": 0,
+      "supplies": 0,
+      "other": 0
+    },
+    "expectedTaxableIncome": 0
+  },
+  {
+    "name": "cooperativa_trabajo",
+    "revenue": 200000,
+    "expenses": {
+      "officeExpenses": 50000,
+      "equipmentDepreciation": 5000,
+      "professionalServices": 10000,
+      "training": 0,
+      "travel": 0,
+      "supplies": 0,
+      "other": 0
+    },
+    "expectedCorporateRate": 0.20
+  }
+]
