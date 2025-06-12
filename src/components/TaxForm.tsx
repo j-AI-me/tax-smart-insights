@@ -9,6 +9,8 @@ import BusinessStructureStep from "@/components/form-steps/BusinessStructureStep
 import TaxStrategyStep from "@/components/form-steps/TaxStrategyStep";
 import OperationalDataStep from "@/components/form-steps/OperationalDataStep";
 import RiskProfileStep from "@/components/form-steps/RiskProfileStep";
+import AccountingDataStep from "@/components/form-steps/AccountingDataStep";
+import { toast } from "@/components/ui/sonner";
 import ResultsPage from "@/components/ResultsPage";
 import { FormData } from "@/types/form";
 
@@ -29,6 +31,13 @@ const TaxForm = ({ onBack }: TaxFormProps) => {
     expectedRevenue: "",
     hasEmployees: "",
     hasInternationalActivity: "",
+    annualIncome: "",
+    annualExpenses: "",
+    annualInvestment: "",
+    activityType: "",
+    currentLegalForm: "",
+    cnae: "",
+    expectedProfit: "",
     preferredTaxStructure: "",
     seekingInvestors: "",
     hasSpecialDeductions: "",
@@ -41,12 +50,13 @@ const TaxForm = ({ onBack }: TaxFormProps) => {
     riskLevel: ""
   });
 
-  const totalSteps = 5;
+  const totalSteps = 6;
   const progress = (currentStep / totalSteps) * 100;
 
   const stepTitles = [
     "Identidad Empresarial",
-    "Estructura y Actividad", 
+    "Estructura y Actividad",
+    "Datos Contables",
     "Estrategia Fiscal",
     "Datos Operativos",
     "Perfil de Riesgo"
@@ -60,7 +70,11 @@ const TaxForm = ({ onBack }: TaxFormProps) => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      setCurrentStep(6); // Show results
+      if (!formData.expectedProfit || Number(formData.expectedProfit) <= 0) {
+        toast({ title: "Indica el beneficio esperado para comparar" });
+        return;
+      }
+      setCurrentStep(7); // Show results
     }
   };
 
@@ -77,19 +91,21 @@ const TaxForm = ({ onBack }: TaxFormProps) => {
       case 2:
         return <BusinessStructureStep formData={formData} updateFormData={updateFormData} />;
       case 3:
-        return <TaxStrategyStep formData={formData} updateFormData={updateFormData} />;
+        return <AccountingDataStep formData={formData} updateFormData={updateFormData} />;
       case 4:
-        return <OperationalDataStep formData={formData} updateFormData={updateFormData} />;
+        return <TaxStrategyStep formData={formData} updateFormData={updateFormData} />;
       case 5:
-        return <RiskProfileStep formData={formData} updateFormData={updateFormData} />;
+        return <OperationalDataStep formData={formData} updateFormData={updateFormData} />;
       case 6:
+        return <RiskProfileStep formData={formData} updateFormData={updateFormData} />;
+      case 7:
         return <ResultsPage formData={formData} onBack={onBack} />;
       default:
         return null;
     }
   };
 
-  if (currentStep === 6) {
+  if (currentStep === 7) {
     return renderStep();
   }
 
