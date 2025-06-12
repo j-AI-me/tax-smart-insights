@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Download, Calendar, TrendingDown, Shield, FileText, CheckCircle, AlertTriangle, Info, Calculator, Euro } from "lucide-react";
 import { FormData } from "@/types/form";
 import { evaluateFiscalRules, getRecommendedTaxStructure } from "@/utils/fiscalRules";
+import { getDefaultFiscalAlerts, getUpcomingObligations } from "@/utils/fiscalAlerts";
 import { compareScenarios, simulateAutonomoTaxes, simulateSLTaxes } from "@/utils/taxSimulator";
 
 interface ResultsPageProps {
@@ -16,6 +17,8 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
   // Evaluación con el nuevo sistema de reglas
   const applicableRules = evaluateFiscalRules(formData);
   const recommendedStructure = getRecommendedTaxStructure(formData);
+  const fiscalAlerts = getDefaultFiscalAlerts(formData);
+  const obligations = getUpcomingObligations(new Date());
   
   // Simulación fiscal real
   const parseRevenue = (revenueRange: string): number => {
@@ -316,6 +319,28 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
               </CardContent>
             </Card>
 
+            {/* Fiscal Alerts */}
+            {fiscalAlerts.length > 0 && (
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-sm">Alertas Fiscales</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-xs">
+                    {fiscalAlerts.map((alert) => (
+                      <div key={alert.id} className="flex items-start gap-2">
+                        <Info className="w-4 h-4 text-red-600 mt-0.5" />
+                        <div>
+                          <div className="font-medium">{alert.title}</div>
+                          <p>{alert.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Compliance Alerts */}
             <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
@@ -323,18 +348,12 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span>IRPF/IS 2024</span>
-                    <Badge variant="outline" className="text-xs">Jun 2025</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>IVA T1</span>
-                    <Badge variant="outline" className="text-xs">Ene 2025</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Modelo 303</span>
-                    <Badge variant="outline" className="text-xs">Ene 2025</Badge>
-                  </div>
+                  {obligations.map((ob) => (
+                    <div key={ob.model} className="flex justify-between">
+                      <span>{ob.model}</span>
+                      <Badge variant="outline" className="text-xs">{ob.dueDate}</Badge>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
