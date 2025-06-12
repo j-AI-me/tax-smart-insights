@@ -60,6 +60,13 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## IRPF vs IS comparison
+
+The utilities folder provides `simulateDoubleEntry` to compare
+progressive IRPF with a flat corporate tax after deductions. This
+function returns the breakdown of both regimes so you can evaluate
+which option is more advantageous.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/fe3db85a-2546-4b50-8678-e68e945bf8ea) and click on Share -> Publish.
