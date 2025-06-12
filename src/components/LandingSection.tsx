@@ -56,9 +56,9 @@ const LandingSection = ({ onStartForm }: LandingSectionProps) => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button 
+            <Button
               onClick={onStartForm}
-              size="lg" 
+              size="lg"
               className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <FileText className="mr-2" />
@@ -67,6 +67,11 @@ const LandingSection = ({ onStartForm }: LandingSectionProps) => {
             <Link to="/casos-exito">
               <Button variant="outline" size="lg" className="text-lg px-8 py-6">
                 Ver casos de éxito
+              </Button>
+            </Link>
+            <Link to="/expert">
+              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+                Modo experto
               </Button>
             </Link>
           </div>
