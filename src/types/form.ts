@@ -13,6 +13,15 @@ export interface FormData {
   expectedRevenue: string;
   hasEmployees: string;
   hasInternationalActivity: string;
+
+  // Accounting Data
+  annualIncome: string;
+  annualExpenses: string;
+  annualInvestment: string;
+  activityType: string;
+  currentLegalForm: string;
+  cnae: string;
+  expectedProfit: string;
   
   // Tax Strategy
   preferredTaxStructure: string;
