@@ -199,6 +199,43 @@ export function simulateSLTaxes(
   };
 }
 
+export function simulateCooperativeTaxes(
+  revenue: number,
+  formData: any,
+  customExpenses?: ExpenseBreakdown
+): TaxCalculation {
+  const deductibleExpenses = estimateDeductibleExpenses(
+    revenue,
+    formData.economicSector,
+    formData.hasEmployees === 'yes',
+    customExpenses
+  );
+
+  const memberSalary = Math.min(revenue * 0.3, 50000);
+  const totalExpenses = deductibleExpenses + memberSalary;
+
+  const taxableIncome = Math.max(0, revenue - totalExpenses);
+  const corporateTax = taxableIncome * 0.20;
+  const vatTax = calculateVAT(revenue) * 0.8;
+  const socialSecurity = calculateSocialSecurity('empleado', memberSalary);
+
+  const totalTaxes = corporateTax + vatTax + socialSecurity;
+  const netIncome = revenue - totalExpenses - totalTaxes;
+  const effectiveTaxRate = revenue > 0 ? (totalTaxes / revenue) * 100 : 0;
+
+  return {
+    grossRevenue: revenue,
+    deductibleExpenses: totalExpenses,
+    taxableIncome,
+    corporateTax,
+    vatTax,
+    socialSecurity,
+    totalTaxes,
+    netIncome,
+    effectiveTaxRate
+  };
+}
+
 export function compareScenarios(revenue: number, formData: any): {
   autonomo: TaxCalculation;
   sl: TaxCalculation;
