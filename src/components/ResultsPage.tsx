@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Download, Calendar, TrendingDown, Shield, FileText, CheckCircle, AlertTriangle, Info, Calculator, Euro } from "lucide-react";
 import { FormData } from "@/types/form";
 import { evaluateFiscalRules, getRecommendedTaxStructure } from "@/utils/fiscalRules";
+import { validateDeductions } from "@/utils/deductions";
 import { compareScenarios, simulateAutonomoTaxes, simulateSLTaxes } from "@/utils/taxSimulator";
 
 interface ResultsPageProps {
@@ -210,24 +211,35 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
                     </p>
                   </div>
                   
-                  {applicableRules.map((rule, index) => (
-                    <div key={rule.id} className="bg-green-50 p-4 rounded-lg border border-green-200">
-                      <div className="flex items-start gap-2">
-                        <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                        <div>
-                          <h4 className="font-medium text-green-800">{rule.name}</h4>
-                          <p className="text-sm text-green-700 mt-1">{rule.recommendation}</p>
-                          {rule.deductions && rule.deductions.length > 0 && (
-                            <ul className="text-xs text-green-600 mt-2 ml-4">
-                              {rule.deductions.map((deduction, i) => (
-                                <li key={i} className="list-disc">{deduction}</li>
-                              ))}
-                            </ul>
-                          )}
+                  {applicableRules.map((rule) => {
+                    const validated = rule.deductions
+                      ? validateDeductions(rule.deductions, recommendedStructure.type as 'autonomo' | 'sl')
+                      : [];
+
+                    return (
+                      <div key={rule.id} className="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <div className="flex items-start gap-2">
+                          <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-medium text-green-800">{rule.name}</h4>
+                            <p className="text-sm text-green-700 mt-1">{rule.recommendation}</p>
+                            {validated.length > 0 && (
+                              <ul className="text-xs text-green-600 mt-2 ml-4 space-y-1">
+                                {validated.map((ded, i) => (
+                                  <li key={i} className="list-disc">
+                                    {ded.name}
+                                    {ded.warnings.map((w, j) => (
+                                      <div key={j} className="text-yellow-700">{w}</div>
+                                    ))}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
