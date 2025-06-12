@@ -155,15 +155,26 @@ const LandingSection = ({ onStartForm }: LandingSectionProps) => {
             <p className="text-xl mb-8 opacity-90">
               Únete a más de 500 empresas que ya han reducido sus impuestos legalmente
             </p>
-            <Button 
-              onClick={onStartForm}
-              size="lg" 
-              variant="secondary"
-              className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <FileText className="mr-2" />
-              Empezar ahora - Es gratis
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                onClick={onStartForm}
+                size="lg"
+                variant="secondary"
+                className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <FileText className="mr-2" />
+                Diagnóstico completo
+              </Button>
+              <Link to="/rapido">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-white border-white/70 hover:bg-white hover:text-blue-600 text-lg px-8 py-6"
+                >
+                  Versión rápida
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
