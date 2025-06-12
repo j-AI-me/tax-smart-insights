@@ -1,10 +1,11 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Download, Calendar, TrendingDown, Shield, FileText, CheckCircle, AlertTriangle, Info } from "lucide-react";
+import { ArrowLeft, Download, Calendar, TrendingDown, Shield, FileText, CheckCircle, AlertTriangle, Info, Calculator, Euro } from "lucide-react";
 import { FormData } from "@/types/form";
+import { evaluateFiscalRules, getRecommendedTaxStructure } from "@/utils/fiscalRules";
+import { compareScenarios, simulateAutonomoTaxes, simulateSLTaxes } from "@/utils/taxSimulator";
 
 interface ResultsPageProps {
   formData: FormData;
@@ -12,63 +13,30 @@ interface ResultsPageProps {
 }
 
 const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
-  // Simple recommendation engine based on form data
-  const generateRecommendations = () => {
-    const recommendations = {
-      taxStructure: "",
-      taxRate: "",
-      estimatedSavings: "",
-      deductions: [] as string[],
-      risks: [] as string[],
-      nextSteps: [] as string[]
-    };
-
-    // Determine recommended tax structure
-    if (formData.expectedRevenue === "Menos de 30.000€") {
-      recommendations.taxStructure = "Autónomo";
-      recommendations.taxRate = "15-47%";
-      recommendations.estimatedSavings = "€2,000 - €5,000";
-    } else if (formData.expectedRevenue.includes("30.000€ - 100.000€")) {
-      recommendations.taxStructure = formData.hasPartners === "yes" ? "Sociedad Limitada" : "Autónomo optimizado";
-      recommendations.taxRate = formData.hasPartners === "yes" ? "25%" : "20-30%";
-      recommendations.estimatedSavings = "€5,000 - €12,000";
-    } else {
-      recommendations.taxStructure = "Sociedad Limitada";
-      recommendations.taxRate = "25%";
-      recommendations.estimatedSavings = "€15,000 - €40,000";
-    }
-
-    // Add deductions based on activity
-    if (formData.hasSpecialDeductions?.includes("rdi")) {
-      recommendations.deductions.push("Deducción I+D+i (hasta 42%)");
-    }
-    if (formData.hasSpecialDeductions?.includes("startup")) {
-      recommendations.deductions.push("Incentivos fiscales para startups");
-    }
-    if (formData.economicSector === "Tecnología e Informática") {
-      recommendations.deductions.push("Amortización acelerada de equipos informáticos");
-    }
-
-    // Add risks based on risk profile
-    if (formData.riskLevel === "conservative") {
-      recommendations.risks.push("Riesgo muy bajo - Estrategias tradicionales");
-    } else if (formData.riskLevel === "aggressive") {
-      recommendations.risks.push("Requiere documentación exhaustiva");
-      recommendations.risks.push("Posible mayor escrutinio en inspecciones");
-    }
-
-    // Next steps
-    recommendations.nextSteps = [
-      "Constitución de la estructura recomendada",
-      "Implementación de sistema contable optimizado",
-      "Planificación fiscal anual",
-      "Revisión trimestral de estrategias"
-    ];
-
-    return recommendations;
+  // Evaluación con el nuevo sistema de reglas
+  const applicableRules = evaluateFiscalRules(formData);
+  const recommendedStructure = getRecommendedTaxStructure(formData);
+  
+  // Simulación fiscal real
+  const parseRevenue = (revenueRange: string): number => {
+    if (revenueRange.includes('Menos de 30.000€')) return 25000;
+    if (revenueRange.includes('30.000€ - 100.000€')) return 65000;
+    if (revenueRange.includes('100.000€ - 300.000€')) return 200000;
+    if (revenueRange.includes('300.000€ - 1M€')) return 650000;
+    if (revenueRange.includes('Más de 1M€')) return 1500000;
+    return 65000;
   };
 
-  const recommendations = generateRecommendations();
+  const estimatedRevenue = parseRevenue(formData.expectedRevenue);
+  const taxComparison = compareScenarios(estimatedRevenue, formData);
+  
+  // Cálculo específico para la estructura recomendada
+  const recommendedCalculation = recommendedStructure.type === 'sl' 
+    ? taxComparison.sl 
+    : taxComparison.autonomo;
+
+  const formatCurrency = (amount: number) => 
+    new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-8">
@@ -80,10 +48,10 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
           </Button>
           <div className="flex-1">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-              Su Plan Fiscal Personalizado
+              Informe Fiscal Personalizado
             </h1>
             <p className="text-muted-foreground">
-              Basado en el análisis de {formData.companyName || "su empresa"}
+              {formData.companyName || "Su empresa"} - Análisis basado en normativa AEAT 2024
             </p>
           </div>
           <div className="flex gap-2">
@@ -93,7 +61,7 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
             </Button>
             <Button className="bg-gradient-to-r from-blue-600 to-green-600">
               <Calendar className="w-4 h-4 mr-2" />
-              Agendar consulta
+              Consulta gratuita
             </Button>
           </div>
         </div>
@@ -101,92 +69,165 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Results */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Executive Summary */}
+            {/* Simulación Fiscal */}
             <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingDown className="w-5 h-5 text-green-600" />
-                  Resumen Ejecutivo
+                  <Calculator className="w-5 h-5 text-blue-600" />
+                  Simulación Fiscal AEAT
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-3 gap-6 mb-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{recommendations.estimatedSavings}</div>
-                    <div className="text-sm text-muted-foreground">Ahorro estimado anual</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {formatCurrency(recommendedCalculation.netIncome)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Beneficio neto anual</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{recommendations.taxRate}</div>
-                    <div className="text-sm text-muted-foreground">Tipo impositivo efectivo</div>
+                    <div className="text-2xl font-bold text-red-600">
+                      {formatCurrency(recommendedCalculation.totalTaxes)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Total impuestos</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">25%</div>
-                    <div className="text-sm text-muted-foreground">Reducción fiscal posible</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {recommendedCalculation.effectiveTaxRate.toFixed(1)}%
+                    </div>
+                    <div className="text-sm text-muted-foreground">Tipo efectivo</div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <span>Facturación bruta:</span>
+                    <span className="font-semibold">{formatCurrency(recommendedCalculation.grossRevenue)}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <span>Gastos deducibles:</span>
+                    <span className="font-semibold text-green-600">-{formatCurrency(recommendedCalculation.deductibleExpenses)}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <span>Base imponible:</span>
+                    <span className="font-semibold">{formatCurrency(recommendedCalculation.taxableIncome)}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-red-50 rounded border border-red-200">
+                    <span>Impuestos totales:</span>
+                    <span className="font-semibold text-red-600">-{formatCurrency(recommendedCalculation.totalTaxes)}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-green-50 rounded border border-green-200">
+                    <span className="font-semibold">Beneficio neto:</span>
+                    <span className="font-bold text-green-600">{formatCurrency(recommendedCalculation.netIncome)}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Recommended Structure */}
+            {/* Comparación de Estructuras */}
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Euro className="w-5 h-5 text-green-600" />
+                  Comparación Autónomo vs SL
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h4 className="font-semibold text-blue-900 mb-2">Régimen de Autónomos</h4>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span>IRPF:</span>
+                        <span>{formatCurrency(taxComparison.autonomo.irpfTax || 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>IVA:</span>
+                        <span>{formatCurrency(taxComparison.autonomo.vatTax)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Seg. Social:</span>
+                        <span>{formatCurrency(taxComparison.autonomo.socialSecurity)}</span>
+                      </div>
+                      <div className="flex justify-between font-semibold border-t pt-1">
+                        <span>Total:</span>
+                        <span>{formatCurrency(taxComparison.autonomo.totalTaxes)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h4 className="font-semibold text-green-900 mb-2">Sociedad Limitada</h4>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span>Imp. Sociedades:</span>
+                        <span>{formatCurrency(taxComparison.sl.corporateTax || 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>IVA:</span>
+                        <span>{formatCurrency(taxComparison.sl.vatTax)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Seg. Social:</span>
+                        <span>{formatCurrency(taxComparison.sl.socialSecurity)}</span>
+                      </div>
+                      <div className="flex justify-between font-semibold border-t pt-1">
+                        <span>Total:</span>
+                        <span>{formatCurrency(taxComparison.sl.totalTaxes)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center p-4 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg">
+                  <div className="text-lg font-semibold mb-1">
+                    {taxComparison.recommendation}
+                  </div>
+                  <div className="text-sm opacity-90">
+                    Cálculo basado en normativa AEAT 2024
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recomendaciones basadas en reglas */}
             <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="w-5 h-5 text-blue-600" />
-                  Estructura Recomendada
+                  Análisis Normativo
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
                     <Badge className="bg-blue-100 text-blue-800 mb-2">
-                      Recomendación principal
+                      Estructura recomendada
                     </Badge>
-                    <h3 className="text-xl font-semibold">{recommendations.taxStructure}</h3>
+                    <h3 className="text-xl font-semibold">{recommendedStructure.name}</h3>
                     <p className="text-muted-foreground">
-                      Basado en su facturación prevista y estructura societaria
+                      Basado en su facturación prevista y normativa fiscal vigente
                     </p>
                   </div>
                   
-                  {formData.hasPartners === "yes" && (
-                    <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  {applicableRules.map((rule, index) => (
+                    <div key={rule.id} className="bg-green-50 p-4 rounded-lg border border-green-200">
                       <div className="flex items-start gap-2">
-                        <Info className="w-5 h-5 text-yellow-600 mt-0.5" />
+                        <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
                         <div>
-                          <h4 className="font-medium text-yellow-800">Estructura societaria</h4>
-                          <p className="text-sm text-yellow-700">
-                            Con {formData.partnerCount} socios, recomendamos una SL con pacto de socios optimizado fiscalmente.
-                          </p>
+                          <h4 className="font-medium text-green-800">{rule.name}</h4>
+                          <p className="text-sm text-green-700 mt-1">{rule.recommendation}</p>
+                          {rule.deductions && rule.deductions.length > 0 && (
+                            <ul className="text-xs text-green-600 mt-2 ml-4">
+                              {rule.deductions.map((deduction, i) => (
+                                <li key={i} className="list-disc">{deduction}</li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Available Deductions */}
-            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  Deducciones Aplicables
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {recommendations.deductions.length > 0 ? (
-                    recommendations.deductions.map((deduction, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                        <span>{deduction}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      <Info className="w-8 h-8 mx-auto mb-2" />
-                      <p>Analizaremos deducciones específicas en la consulta personalizada</p>
-                    </div>
-                  )}
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -201,12 +242,12 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recommendations.nextSteps.map((step, index) => (
+                  {applicableRules.slice(0, 4).map((rule, index) => (
                     <div key={index} className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                         {index + 1}
                       </div>
-                      <span>{step}</span>
+                      <span>{rule.name}</span>
                     </div>
                   ))}
                 </div>
@@ -242,6 +283,14 @@ const ResultsPage = ({ formData, onBack }: ResultsPageProps) => {
                     {formData.riskLevel === "moderate" && "Equilibrio riesgo-beneficio"}
                     {formData.riskLevel === "aggressive" && "Máxima optimización"}
                   </div>
+                  {applicableRules.some(rule => rule.risks && rule.risks.length > 0) && (
+                    <div className="mt-2 space-y-1">
+                      <div className="font-medium">Riesgos identificados:</div>
+                      {applicableRules.flatMap(rule => rule.risks || []).map((risk, i) => (
+                        <div key={i} className="text-orange-700">• {risk}</div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
