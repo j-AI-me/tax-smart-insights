@@ -1,8 +1,8 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, TrendingDown, Shield, FileText, Users, Award } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface LandingSectionProps {
   onStartForm: () => void;
@@ -64,9 +64,11 @@ const LandingSection = ({ onStartForm }: LandingSectionProps) => {
               <FileText className="mr-2" />
               Crear mi plan fiscal gratuito
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-              Ver casos de éxito
-            </Button>
+            <Link to="/casos-exito">
+              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+                Ver casos de éxito
+              </Button>
+            </Link>
           </div>
 
           <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
