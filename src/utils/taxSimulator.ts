@@ -1,3 +1,4 @@
+import { evaluateFiscalRules, getRecommendedTaxStructure } from "./fiscalRules";
 
 export interface TaxCalculation {
   grossRevenue: number;
@@ -43,6 +44,10 @@ const SS_BASES = {
   autonomo_maxima: 1266.00,
   empleado_empresa_rate: 0.2955 // 29.55% total (empresa + trabajador)
 };
+
+// Supuestos generales de simulación
+export const DEFAULT_EXPENSE_RATIO = 0.30; // 30% de gastos medios si no hay datos
+export const EQUIPMENT_AMORTIZATION_RATE = 0.20; // Amortización anual del 20%
 
 export function calculateIRPF(taxableIncome: number): number {
   let tax = 0;
@@ -121,7 +126,7 @@ function getSectorExpenseRatio(sector: string): number {
     'Salud': 0.30
   };
 
-  return sectorRatios[sector] || 0.30; // 30% por defecto
+  return sectorRatios[sector] || DEFAULT_EXPENSE_RATIO;
 }
 
 export function simulateAutonomoTaxes(
@@ -220,3 +225,44 @@ export function compareScenarios(revenue: number, formData: any): {
     recommendation
   };
 }
+
+function parseRevenue(range: string): number {
+  if (!range) return 0;
+  if (range.includes('Menos de 30.000€')) return 25000;
+  if (range.includes('30.000€ - 100.000€')) return 65000;
+  if (range.includes('100.000€ - 300.000€')) return 200000;
+  if (range.includes('300.000€ - 1M€')) return 650000;
+  if (range.includes('Más de 1M€')) return 1500000;
+  return 0;
+}
+
+export interface SimulacionFiscal {
+  estructura: string;
+  cuotaTributaria: number;
+  deduccionesAplicables: string[];
+  ahorroNeto: number;
+  bruto: number;
+  neto: number;
+}
+
+export function simularFiscalidad(formData: any): SimulacionFiscal {
+  const revenue = parseRevenue(formData.expectedRevenue);
+  const regime = getRecommendedTaxStructure(formData);
+  const autonomo = simulateAutonomoTaxes(revenue, formData);
+  const sl = simulateSLTaxes(revenue, formData);
+
+  const calc = regime.type === 'sl' ? sl : autonomo;
+  const other = regime.type === 'sl' ? autonomo : sl;
+
+  const deductions = evaluateFiscalRules(formData).flatMap(r => r.deductions || []);
+
+  return {
+    estructura: regime.name,
+    cuotaTributaria: calc.totalTaxes,
+    deduccionesAplicables: deductions,
+    ahorroNeto: other.totalTaxes - calc.totalTaxes,
+    bruto: revenue,
+    neto: calc.netIncome
+  };
+}
+
